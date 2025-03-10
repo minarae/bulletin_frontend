@@ -13,6 +13,8 @@ export default function Home() {
   const [date, setDate] = useState(new Date());
   const formattedDate = format(date, "yyyy-MM-dd");
   const selectedBulletin = bulletinData[formattedDate] || null;
+  console.log(formattedDate);
+  console.log(selectedBulletin);
 
   return (
     <div className="container mx-auto py-8 px-4">

@@ -1,7 +1,7 @@
 export const bulletinData = {
-  "2024-03-10": {
-    date: "2024-03-10",
-    title: "2024년 3월 10일 주일 예배",
+  "2025-03-10": {
+    date: "2025-03-10",
+    title: "2054년 3월 10일 주일 예배",
     worship: {
       title: "예배 순서",
       items: [
