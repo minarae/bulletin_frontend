@@ -1,0 +1,203 @@
+# 페르소나: 시니어 프론트엔드 개발자
+# - React와 Next.js 전문가
+# - Tailwind CSS 및 shadcn/ui 생태계에 정통
+# - CSS 및 웹 디자인 시스템에 대한 깊은 이해
+# - 성능 최적화 및 접근성에 중점
+# - 컴포넌트 아키텍처 및 상태 관리 전문
+
+[general]
+line_length = 80
+tab_size = 2
+use_spaces = true
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[eslint]
+enabled = true
+fix_on_save = true
+
+# Next.js, React, Tailwind, shadcn 프로젝트에 맞는 ESLint 규칙
+rule_overrides = [
+  # React 관련 규칙
+  "react/prop-types=off",
+  "react/react-in-jsx-scope=off",
+  "react-hooks/rules-of-hooks=error",
+  "react-hooks/exhaustive-deps=warn",
+
+  # Next.js 관련 규칙
+  "@next/next/no-img-element=warn",
+  "@next/next/no-html-link-for-pages=error",
+  "next/core-web-vitals=error",
+
+  # 접근성 관련 규칙
+  "jsx-a11y/alt-text=error",
+  "jsx-a11y/aria-props=error",
+  "jsx-a11y/role-has-required-aria-props=error",
+
+  # 일반 코드 스타일
+  "no-unused-vars=[error, {argsIgnorePattern: ^_, varsIgnorePattern: ^_}]",
+  "no-console=[warn, {allow: [warn, error, info]}]",
+  "prefer-const=error",
+
+  # 성능 관련
+  "react/no-array-index-key=warn",
+  "react/jsx-no-bind=warn",
+  "react/jsx-fragments=error",
+]
+
+[prettier]
+enabled = true
+format_on_save = true
+print_width = 80
+tab_width = 2
+use_tabs = false
+semi = true
+single_quote = true
+trailing_comma = "es5"
+bracket_spacing = true
+bracket_same_line = false
+arrow_parens = "always"
+end_of_line = "lf"
+
+# Tailwind CSS 클래스 정렬 플러그인 설정
+plugins = ["prettier-plugin-tailwindcss"]
+
+[typescript]
+enabled = true
+strict_mode = true
+check_on_save = true
+
+# TypeScript 규칙
+no_implicit_any = true
+strict_null_checks = true
+strict_function_types = true
+no_unused_locals = true
+no_unused_parameters = true
+jsx_factory = "React.createElement"
+jsx_fragment_factory = "React.Fragment"
+
+# 고급 타입 검사
+no_unchecked_indexed_access = true
+no_implicit_returns = true
+exhaustive_deps_check = true
+
+[import_sort]
+enabled = true
+sort_on_save = true
+style = "module"
+
+# 모듈 그룹화 순서 설정
+groups = [
+  "^react",
+  "^next",
+  "^@/components/ui",   # shadcn 컴포넌트
+  "^@/components",      # 커스텀 컴포넌트
+  "^@/lib",             # 유틸리티
+  "^@/hooks",           # 커스텀 훅
+  "^@/context",         # 컨텍스트
+  "^@/store",           # 상태 관리
+  "^@/styles",          # 스타일
+  "^@/types",           # 타입 정의
+  "^@/",                # 기타 로컬 임포트
+  "^[./]"               # 상대 경로 임포트
+]
+
+[tailwind]
+enabled = true
+class_sorting = "tailwindcss/classnames-order"
+
+# Tailwind CSS 클래스 정렬 우선순위 (경험에 기반한 최적 순서)
+class_groups = [
+  "position",    # position, z-index
+  "display",     # display, visibility
+  "layout",      # container, overflow
+  "flexbox",     # flex 관련
+  "grid",        # grid 관련
+  "box",         # width, height, padding, margin
+  "border",      # border, rounded
+  "background",  # bg-*
+  "typography",  # font, text, tracking
+  "color",       # text-color
+  "shadow",      # shadow
+  "transition",  # transition, animation
+  "transform",   # transform, scale, rotate
+  "state",       # hover, focus, active
+  "dark",        # dark mode
+  "responsive"   # media query variants
+]
+
+# 컴포넌트 네이밍 규칙
+[component_naming]
+enabled = true
+pattern = "PascalCase"
+page_pattern = "kebab-case"
+hook_prefix = "use"
+context_suffix = "Context"
+provider_suffix = "Provider"
+
+[exclude]
+patterns = [
+  "node_modules",
+  ".next",
+  "out",
+  "build",
+  "dist",
+  ".git",
+  "*.min.js",
+  "public",
+  "coverage",
+  "storybook-static"
+]
+
+[formatter.component_structure]
+enabled = true
+order = [
+  "imports",
+  "types",
+  "interfaces",
+  "constants",
+  "context",
+  "hooks",
+  "component_function",
+  "styled_components",
+  "jsx",
+  "exports"
+]
+
+[path_alias]
+enabled = true
+base_path = "src"
+aliases = [
+  { prefix = "@/components", path = "components" },
+  { prefix = "@/lib", path = "lib" },
+  { prefix = "@/hooks", path = "hooks" },
+  { prefix = "@/styles", path = "styles" },
+  { prefix = "@/types", path = "types" },
+  { prefix = "@/context", path = "context" },
+  { prefix = "@/utils", path = "utils" },
+  { prefix = "@/store", path = "store" },
+  { prefix = "@/api", path = "api" },
+  { prefix = "@/assets", path = "assets" }
+]
+
+[performance]
+enabled = true
+check_bundle_size = true
+check_image_optimization = true
+check_react_memo_usage = true
+check_usecallback_usage = true
+
+[accessibility]
+enabled = true
+enforce_aria_roles = true
+enforce_alt_text = true
+enforce_focus_management = true
+enforce_keyboard_navigation = true
+
+[best_practices]
+enabled = true
+check_semantic_html = true
+check_responsive_design = true
+check_state_management = true
+enforce_error_boundaries = true
+enforce_suspense_usage = true
