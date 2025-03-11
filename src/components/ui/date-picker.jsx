@@ -12,9 +12,43 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export function DatePicker({ date, setDate }) {
+export function DatePicker({ date, setDate, disabledDates, availableDates }) {
+  // Popover 상태 관리
+  const [open, setOpen] = React.useState(false);
+
+  // 날짜 비활성화 함수
+  const disabledDaysFilter = React.useCallback((day) => {
+    if (disabledDates) {
+      return disabledDates(day);
+    }
+    return false;
+  }, [disabledDates]);
+
+  // 사용 가능한 날짜 강조 표시
+  const modifiers = React.useMemo(() => {
+    return {
+      available: availableDates || [],
+    };
+  }, [availableDates]);
+
+  // 사용 가능한 날짜 스타일
+  const modifiersStyles = React.useMemo(() => {
+    return {
+      available: {
+        fontWeight: 'bold',
+        border: '1px solid #4f46e5',
+      },
+    };
+  }, []);
+
+  // 날짜 선택 핸들러
+  const handleSelect = (newDate) => {
+    setDate(newDate);
+    setOpen(false); // 날짜 선택 시 팝오버 닫기
+  };
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
@@ -31,9 +65,18 @@ export function DatePicker({ date, setDate }) {
         <Calendar
           mode="single"
           selected={date}
-          onSelect={setDate}
+          onSelect={handleSelect}
           initialFocus
           locale={ko}
+          disabled={disabledDaysFilter}
+          modifiers={modifiers}
+          modifiersStyles={modifiersStyles}
+          footer={
+            <div className="px-4 pb-3 pt-0 text-center text-sm text-muted-foreground">
+              <span className="inline-block w-3 h-3 mr-1 border border-indigo-500"></span>
+              <span>주보가 등록된 날짜</span>
+            </div>
+          }
         />
       </PopoverContent>
     </Popover>
