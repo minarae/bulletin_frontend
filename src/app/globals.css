@@ -122,5 +122,50 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* 모바일 최적화 */
+  input, button, select, textarea {
+    font-size: 16px; /* 모바일에서 자동 확대 방지 */
+  }
+
+  /* 모바일 터치 최적화 */
+  button, a {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 모바일 스크롤 최적화 */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  /* 모바일 화면 최적화 */
+  @media (max-width: 640px) {
+    html, body {
+      font-size: 14px;
+    }
+
+    input, select, textarea {
+      font-size: 16px;
+    }
+
+    button {
+      min-height: 44px; /* 터치 영역 최소 크기 */
+    }
   }
 }
