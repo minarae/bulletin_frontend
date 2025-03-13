@@ -102,6 +102,7 @@ class ApiClient {
   // API 요청 메서드
   async get(url, config) {
     try {
+      console.log(`GET ${url} 요청`);
       const response = await this.client.get(url, config);
       return response.data;
     } catch (error) {

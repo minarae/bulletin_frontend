@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 // 인증이 필요한 경로 목록
-const protectedRoutes = ['/'];
+const protectedRoutes = ['/churches', '/bulletins', '/templates'];
 // 인증된 사용자가 접근할 수 없는 경로 목록 (로그인, 회원가입 등)
 const authRoutes = ['/login', '/register', '/forgot-password'];
 
@@ -14,6 +14,12 @@ export function middleware(request) {
 
   console.log('미들웨어 실행:', pathname, '인증 상태:', isAuthenticated);
 
+  // 루트 경로에 접근하는 경우 교회 목록 페이지로 리다이렉트
+  if (pathname === '/' && isAuthenticated) {
+    console.log('인증된 사용자가 루트 경로에 접근: 교회 목록으로 리다이렉트');
+    return NextResponse.redirect(new URL('/churches', request.url));
+  }
+
   // 인증이 필요한 경로에 인증되지 않은 사용자가 접근하는 경우
   if (protectedRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`)) && !isAuthenticated) {
     console.log('인증되지 않은 사용자가 보호된 경로에 접근:', pathname);
@@ -25,7 +31,7 @@ export function middleware(request) {
   // 인증된 사용자가 로그인/회원가입 페이지에 접근하는 경우
   if (authRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`)) && isAuthenticated) {
     console.log('인증된 사용자가 인증 페이지에 접근:', pathname);
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/churches', request.url));
   }
 
   return NextResponse.next();
