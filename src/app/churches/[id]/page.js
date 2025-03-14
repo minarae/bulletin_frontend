@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -13,13 +13,26 @@ import {
   Edit,
   Trash2,
   Plus,
-  ArrowLeft
+  ArrowLeft,
+  Copy,
+  Loader2
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction
+} from "@/components/ui/alert-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import api from "@/lib/api";
 
 export default function ChurchDetailPage({ params }) {
@@ -28,28 +41,41 @@ export default function ChurchDetailPage({ params }) {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("bulletins");
+  const [deleteTemplateId, setDeleteTemplateId] = useState(null);
+  const [copyTemplateId, setCopyTemplateId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { id: churchId } = React.use(params);
+
+  // URL 쿼리 파라미터에서 탭 정보 가져오기
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['bulletins', 'templates', 'settings'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // 교회 정보 불러오기
   useEffect(() => {
     const fetchChurchData = async () => {
       try {
         setLoading(true);
-        const churchData = await api.get(`/churches/${churchId}`);
-        setChurch(churchData);
+        const churchResponse = await api.get(`/churches/${churchId}`);
+        setChurch(churchResponse);
 
         // 주보 목록 불러오기
-        const bulletinsData = await api.get(`/bulletins/${churchId}/`);
-        setBulletins(bulletinsData);
+        const bulletinsResponse = await api.get(`/bulletins/${churchId}/`);
+        setBulletins(bulletinsResponse);
 
         // 템플릿 목록 불러오기
-        const templatesData = await api.get(`/templates/${churchId}/`);
-        setTemplates(templatesData);
+        const templatesResponse = await api.get(`/templates/${churchId}/`);
+        setTemplates(templatesResponse);
       } catch (error) {
-        console.error("교회 정보를 불러오는데 실패했습니다:", error);
-        toast.error("교회 정보를 불러오는데 실패했습니다.");
+        console.error("교회 정보 불러오기 오류:", error);
+        toast.error("교회 정보를 불러오는 중 오류가 발생했습니다.");
         router.push("/churches");
       } finally {
         setLoading(false);
@@ -68,6 +94,35 @@ export default function ChurchDetailPage({ params }) {
       day: 'numeric',
       weekday: 'long'
     });
+  };
+
+  // 템플릿 복사 처리
+  const handleCopyTemplate = (templateId) => {
+    setCopyTemplateId(templateId);
+  };
+
+  const handleCopyConfirm = async () => {
+    if (!copyTemplateId) return;
+
+    try {
+      setIsCopying(true);
+      await api.post(`/templates/${churchId}/${copyTemplateId}/copy`);
+      toast.success('템플릿이 성공적으로 복사되었습니다.');
+
+      // 템플릿 목록 다시 불러오기
+      const templatesResponse = await api.get(`/templates/${churchId}/`);
+      setTemplates(templatesResponse);
+    } catch (error) {
+      console.error('템플릿 복사 오류:', error);
+      toast.error('템플릿 복사 중 오류가 발생했습니다.');
+    } finally {
+      setIsCopying(false);
+      setCopyTemplateId(null);
+    }
+  };
+
+  const handleCancelCopy = () => {
+    setCopyTemplateId(null);
   };
 
   if (loading) {
@@ -93,8 +148,8 @@ export default function ChurchDetailPage({ params }) {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold">{church.name}</h1>
-            <p className="text-gray-500 mt-1">구분값: {church.church_code}</p>
+            <h1 className="text-3xl font-bold">{church?.name}</h1>
+            <p className="text-gray-500 mt-1">구분값: {church?.church_code}</p>
           </div>
           <Button
             variant="outline"
@@ -124,57 +179,67 @@ export default function ChurchDetailPage({ params }) {
         <TabsContent value="bulletins" className="mt-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">주보 목록</h2>
-            <Button onClick={() => router.push(`/churches/${churchId}/bulletins/new`)}>
-              <Plus className="mr-2 h-4 w-4" /> 새 주보 작성
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/churches/${churchId}/bulletins`)}
+              >
+                <FileText className="mr-2 h-4 w-4" /> 전체 주보 목록
+              </Button>
+              <Button onClick={() => router.push(`/churches/${churchId}/bulletins/new`)}>
+                <Plus className="mr-2 h-4 w-4" /> 새 주보 작성
+              </Button>
+            </div>
           </div>
 
           {bulletins.length > 0 ? (
-            <div className="grid gap-4">
-              {bulletins.map((bulletin) => (
-                <Card key={bulletin.id} className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">{formatDate(bulletin.date)}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-3">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 text-gray-500 mr-2" />
-                        <span className="text-sm text-gray-500">
-                          작성일: {new Date(bulletin.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/churches/${churchId}/bulletins/${bulletin.id}/edit`)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteBulletin(bulletin.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-between"
-                      onClick={() => router.push(`/churches/${churchId}/bulletins/${bulletin.id}`)}
-                    >
-                      <span>주보 보기</span>
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <CardContent className="px-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>날짜</TableHead>
+                      <TableHead>작성일</TableHead>
+                      <TableHead className="text-right">관리</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bulletins.map((bulletin) => (
+                      <TableRow key={bulletin.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/churches/${churchId}/bulletins/${bulletin.id}`)}>
+                        <TableCell className="font-medium">{formatDate(bulletin.date)}</TableCell>
+                        <TableCell>{new Date(bulletin.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/churches/${churchId}/bulletins/${bulletin.id}/edit`);
+                              }}
+                              title="주보 수정"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteBulletin(bulletin.id);
+                              }}
+                              title="주보 삭제"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           ) : (
             <Card>
               <CardHeader>
@@ -197,52 +262,91 @@ export default function ChurchDetailPage({ params }) {
 
         {/* 템플릿 관리 탭 */}
         <TabsContent value="templates" className="mt-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">템플릿 목록</h2>
-            <Button onClick={() => router.push(`/churches/${churchId}/templates/new`)}>
-              <Plus className="mr-2 h-4 w-4" /> 새 템플릿 추가
-            </Button>
+          <div className="flex justify-end items-center mb-6">
+            {/* <h2 className="text-xl font-semibold">템플릿 목록</h2> */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/churches/${churchId}/templates`)}
+              >
+                <Layout className="mr-2 h-4 w-4" /> 전체 템플릿 목록
+              </Button>
+              <Button onClick={() => router.push(`/churches/${churchId}/templates/new`)}>
+                <Plus className="mr-2 h-4 w-4" /> 새 템플릿 생성
+              </Button>
+            </div>
           </div>
 
           {templates.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.map((template) => (
-                <Card key={template.id} className="overflow-hidden">
-                  <CardHeader>
-                    <CardTitle>{template.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-40 bg-gray-100 rounded-md flex items-center justify-center">
-                      <Layout className="h-10 w-10 text-gray-400" />
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      onClick={() => router.push(`/churches/${churchId}/templates/${template.id}`)}
-                    >
-                      미리보기
-                    </Button>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => router.push(`/churches/${churchId}/templates/${template.id}/edit`)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleDeleteTemplate(template.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <CardContent className="px-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-center">템플릿 이름</TableHead>
+                      <TableHead className="text-center">생성일</TableHead>
+                      <TableHead className="text-center">관리</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {templates.map((template) => (
+                      <TableRow key={template.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/churches/${churchId}/templates/${template.id}/edit`)}>
+                        <TableCell className="font-medium text-center">{template.name}</TableCell>
+                        <TableCell className="text-center">{new Date(template.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/churches/${churchId}/templates/${template.id}/edit`);
+                              }}
+                              title="템플릿 수정"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyTemplate(template.id);
+                              }}
+                              title="템플릿 복사"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/churches/${churchId}/bulletins/new?template=${template.id}`);
+                              }}
+                              title="이 템플릿으로 주보 생성"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTemplate(template.id);
+                              }}
+                              title="템플릿 삭제"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           ) : (
             <Card>
               <CardHeader>
@@ -319,6 +423,34 @@ export default function ChurchDetailPage({ params }) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* 템플릿 복사 확인 다이얼로그 */}
+      <AlertDialog open={!!copyTemplateId} onOpenChange={handleCancelCopy}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>템플릿 복사</AlertDialogTitle>
+            <AlertDialogDescription>
+              이 템플릿을 복사하여 새 템플릿을 만드시겠습니까?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCopyConfirm}
+              disabled={isCopying}
+            >
+              {isCopying ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  복사 중...
+                </>
+              ) : (
+                '복사'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 
