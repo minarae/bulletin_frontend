@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -30,7 +30,7 @@ export default function ChurchDetailPage({ params }) {
   const [activeTab, setActiveTab] = useState("bulletins");
 
   const router = useRouter();
-  const churchId = params.id;
+  const { id: churchId } = React.use(params);
 
   // 교회 정보 불러오기
   useEffect(() => {
@@ -41,11 +41,11 @@ export default function ChurchDetailPage({ params }) {
         setChurch(churchData);
 
         // 주보 목록 불러오기
-        const bulletinsData = await api.get(`/churches/${churchId}/bulletins`);
+        const bulletinsData = await api.get(`/bulletins/${churchId}/`);
         setBulletins(bulletinsData);
 
         // 템플릿 목록 불러오기
-        const templatesData = await api.get(`/churches/${churchId}/templates`);
+        const templatesData = await api.get(`/templates/${churchId}/`);
         setTemplates(templatesData);
       } catch (error) {
         console.error("교회 정보를 불러오는데 실패했습니다:", error);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
@@ -23,7 +23,7 @@ export default function EditChurchPage({ params }) {
   const [saving, setSaving] = useState(false);
 
   const router = useRouter();
-  const churchId = params.id;
+  const { id: churchId } = React.use(params);
 
   // 교회 정보 불러오기
   useEffect(() => {
@@ -145,7 +145,7 @@ export default function EditChurchPage({ params }) {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex justify-between mt-4">
             <Button
               type="button"
               variant="outline"
