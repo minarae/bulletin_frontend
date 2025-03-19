@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { churchData } from "@/lib/sample-data";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import { Calendar } from '@/components/ui/calendar';
+import { TiptapEditor } from '@/components/ui/tiptap-editor';
 
 // 찬송가 컴포넌트
 const HymnViewer = ({ hymnNumber, onClose }) => {
@@ -404,99 +406,126 @@ export default function Home() {
   }, [defaultTab, activeTab]);
 
   return (
-    <div className="container mx-auto py-4 sm:py-8 px-4 sm:px-6 max-w-4xl">
-      <header className="mb-6 sm:mb-8 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3">온라인 주보</h1>
-        <p className="text-gray-500 mb-4 sm:mb-6 text-base sm:text-lg">사랑의 교회 온라인 주보 서비스</p>
+    <div className="container mx-auto py-10 px-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">주보 시스템</h1>
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="md:hidden bg-primary text-white px-3 py-2 rounded-md text-sm">
+              메뉴
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left">
+            <SheetTitle className="text-lg font-semibold mb-4">섹션 메뉴</SheetTitle>
+            <MobileMenu
+              sections={sections}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+          </SheetContent>
+        </Sheet>
+      </div>
 
-        <div className="max-w-xs mx-auto mb-6 sm:mb-8">
-          <DatePicker
-            date={date}
-            setDate={handleDateSelect}
-            disabledDates={isDateDisabled}
-            availableDates={availableDates}
-          />
-        </div>
-
-        {selectedBulletin ? (
-          <div className="mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-semibold">{selectedBulletin.title}</h2>
+      {/* 날짜 선택 UI */}
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <div className="w-full md:w-auto">
+            <DatePicker
+              date={date}
+              setDate={setDate}
+              disabledDates={isDateDisabled}
+              availableDates={availableDates}
+            />
           </div>
-        ) : (
-          <Card className="max-w-md mx-auto bg-amber-50">
-            <CardContent className="pt-6 px-4 sm:px-6 py-4 sm:py-6">
-              <p className="text-center text-amber-800 text-base sm:text-lg">
-                선택하신 날짜({format(date, "yyyy년 MM월 dd일", { locale: ko })})에 해당하는 주보가 없습니다.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </header>
-
-      {selectedBulletin && sections.length > 0 && (
-        <main>
-          <Tabs value={activeTab || defaultTab} onValueChange={setActiveTab} className="w-full">
-            {/* 모바일 햄버거 메뉴 (sm 미만에서만 표시) */}
-            <div className="block sm:hidden mb-4">
-              <div className="flex items-center justify-between bg-white rounded-lg shadow-sm p-3">
-                <h3 className="font-medium text-base pl-1 flex items-center">
-                  <span className="w-1 h-5 bg-gray-500 rounded mr-2 inline-block"></span>
-                  {sections.find(s => s.key === (activeTab || defaultTab))?.title}
-                </h3>
-                <MobileMenu
-                  sections={sections}
-                  activeTab={activeTab || defaultTab}
-                  setActiveTab={setActiveTab}
-                />
+          <div className="text-lg font-semibold flex-1">
+            {formattedDate && (
+              <div>
+                <span className="hidden md:inline">선택한 날짜: </span>
+                {format(date, "yyyy년 MM월 dd일 (EEEE)", { locale: ko })}
               </div>
-            </div>
+            )}
+          </div>
+        </div>
+      </div>
 
-            {/* 데스크톱 탭 메뉴 (sm 이상에서만 표시) */}
-            <div className="hidden sm:block relative mb-2">
-              <div
-                className="bg-gray-100 rounded-lg p-1 overflow-x-auto no-scrollbar"
-                style={{ WebkitOverflowScrolling: 'touch' }}
-              >
-                <div className={`grid grid-flow-col auto-cols-auto gap-1 ${sections.length > 6 ? 'min-w-max' : 'w-full'}`}>
-                  {sections.map(section => (
+      {selectedBulletin ? (
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* 좌측 메뉴 영역 (태블릿/데스크탑) */}
+          <div className="hidden md:block w-64 flex-shrink-0">
+            <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+              <h2 className="font-semibold text-lg mb-3">섹션 메뉴</h2>
+              <ul className="space-y-1">
+                {sections.map(section => (
+                  <li key={section.key}>
                     <button
-                      key={section.key}
                       onClick={() => setActiveTab(section.key)}
-                      className={`text-sm whitespace-nowrap px-4 py-2 h-10 flex items-center justify-center rounded-md transition-all ${
-                        (activeTab || defaultTab) === section.key
-                          ? 'bg-white shadow-sm font-medium'
-                          : 'hover:bg-gray-200'
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-md transition-colors ${activeTab === section.key ? 'bg-primary text-white' : 'hover:bg-gray-200'
+                        }`}
                     >
                       {section.title}
                     </button>
-                  ))}
-                </div>
-              </div>
-              {sections.length > 6 && (
-                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-100 to-transparent pointer-events-none"></div>
-              )}
+                  </li>
+                ))}
+              </ul>
             </div>
+          </div>
 
-            {sections.map(section => (
-              <TabsContent key={section.key} value={section.key} className="mt-4 sm:mt-6">
-                <Card>
-                  <CardHeader className="py-4 sm:py-6">
-                    <CardTitle className="text-xl sm:text-2xl">{section.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-base sm:text-lg">
-                    {renderSectionContent(section.key, selectedBulletin[section.key])}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </main>
+          {/* 주보 내용 영역 */}
+          <div className="flex-1">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="mb-4 overflow-x-auto flex flex-nowrap w-full md:hidden">
+                {sections.map(section => (
+                  <TabsTrigger
+                    key={section.key}
+                    value={section.key}
+                    className="whitespace-nowrap"
+                  >
+                    {section.title}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {sections.map(section => (
+                <TabsContent key={section.key} value={section.key} className="pt-2">
+                  {renderSectionContent(section, selectedBulletin[section.key])}
+                </TabsContent>
+              ))}
+
+              {activeTab === "" && sections.length > 0 && (
+                <div className="text-center py-10">
+                  <p className="text-gray-500">왼쪽 메뉴에서 섹션을 선택해주세요</p>
+                </div>
+              )}
+            </Tabs>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-16">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            해당 날짜의 주보가 없습니다
+          </h2>
+          <p className="text-gray-500">
+            다른 날짜를 선택하시거나 관리자에게 문의해주세요
+          </p>
+        </div>
       )}
 
-      <footer className="mt-10 sm:mt-12 text-center text-gray-500 text-sm sm:text-base py-4">
-        <p>© 2024 사랑의 교회 온라인 주보</p>
-      </footer>
+      {/* TipTap 에디터 샘플 페이지 링크 */}
+      <div className="mt-16 text-center">
+        <a
+          href="/editor-sample"
+          className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+        >
+          TipTap 에디터 샘플 페이지 가기
+        </a>
+        <p className="mt-2 text-sm text-gray-500">
+          HTML 에디터를 사용해보고 싶으시면 위 링크를 클릭해주세요.
+        </p>
+      </div>
     </div>
   );
 }
